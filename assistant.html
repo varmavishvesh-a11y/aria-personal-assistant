@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aria - Your Personal Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Work+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0e14;
+            --bg-secondary: #151922;
+            --bg-tertiary: #1f2633;
+            --accent-gold: #d4af37;
+            --accent-blue: #4a9eff;
+            --text-primary: #e8e8e8;
+            --text-secondary: #a0a0a0;
+            --text-muted: #6a6a6a;
+            --border-color: #2a3142;
+            --success: #4ade80;
+            --danger: #f87171;
+        }
+
+        body {
+            font-family: 'Work Sans', sans-serif;
+            background: linear-gradient(135deg, #0a0e14 0%, #151922 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(212, 175, 55, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(74, 158, 255, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 4rem;
+            font-weight: 300;
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 300;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .panel:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .panel-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            font-weight: 400;
+            color: var(--accent-gold);
+        }
+
+        .badge {
+            background: var(--accent-blue);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .email-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .email-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .email-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: var(--accent-blue);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .email-card:hover {
+            background: rgba(74, 158, 255, 0.05);
+            border-color: var(--accent-blue);
+            transform: translateX(8px);
+        }
+
+        .email-card:hover::before {
+            transform: scaleY(1);
+        }
+
+        .email-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .email-sender {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .email-time {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .email-subject {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--accent-gold);
+        }
+
+        .email-preview {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .email-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .email-card:hover .email-actions {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Work Sans', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-gold), #c09030);
+            color: var(--bg-primary);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-primary);
+            border-color: var(--accent-blue);
+        }
+
+        .calendar-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .calendar-event {
+            background: var(--bg-tertiary);
+            border-left: 4px solid var(--accent-gold);
+            border-radius: 8px;
+            padding: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .calendar-event:hover {
+            background: rgba(212, 175, 55, 0.05);
+            transform: translateX(8px);
+        }
+
+        .event-time {
+            font-size: 0.9rem;
+            color: var(--accent-blue);
+            font-weight: 500;
+            margin-bottom: 0.3rem;
+        }
+
+        .event-title {
+            font-weight: 500;
+            margin-bottom: 0.3rem;
+        }
+
+        .event-description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2.5rem;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.4s ease;
+        }
+
+        .modal-header {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            color: var(--accent-gold);
+            margin-bottom: 1.5rem;
+        }
+
+        .ai-response {
+            background: var(--bg-tertiary);
+            border-left: 3px solid var(--accent-blue);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--success);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s ease;
+            z-index: 2000;
+        }
+
+        .toast.active {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 968px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Aria</h1>
+            <p class="subtitle">Your Personal Assistant</p>
+        </header>
+
+        <div class="dashboard">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Inbox</h2>
+                    <span class="badge">5 Unread</span>
+                </div>
+                <div class="email-list" id="emailList"></div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Today's Schedule</h2>
+                    <span class="badge">3 Events</span>
+                </div>
+                <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="aiModal">
+        <div class="modal-content">
+            <h3 class="modal-header" id="modalTitle">AI Assistant Response</h3>
+            <div class="ai-response" id="aiResponse"></div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmAction()">Confirm & Send</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const emails = [
+            {
+                id: 1,
+                sender: 'Sarah Johnson',
+                subject: 'Q4 Budget Review Meeting',
+                preview: 'Hi! I wanted to schedule a meeting to discuss the Q4 budget allocation. Are you available next Tuesday?',
+                time: '10:30 AM',
+                type: 'meeting'
+            },
+            {
+                id: 2,
+                sender: 'Tech Conference 2024',
+                subject: 'Your Speaker Invitation',
+                preview: 'Congratulations! We would love to have you as a keynote speaker at our annual tech conference...',
+                time: '9:15 AM',
+                type: 'invitation'
+            },
+            {
+                id: 3,
+                sender: 'Mark Chen',
+                subject: 'Project Update Required',
+                preview: 'Hey, could you send me an update on the mobile app project? The stakeholders are asking for a status report.',
+                time: 'Yesterday',
+                type: 'follow-up'
+            },
+            {
+                id: 4,
+                sender: 'LinkedIn Notifications',
+                subject: 'You appeared in 15 searches this week',
+                preview: 'Your profile is getting attention! See who viewed your profile and expand your network...',
+                time: 'Yesterday',
+                type: 'notification'
+            },
+            {
+                id: 5,
+                sender: 'Emma Rodriguez',
+                subject: 'Coffee catch-up?',
+                preview: 'It has been a while! Would love to catch up over coffee and hear about your new role. How about Friday?',
+                time: '2 days ago',
+                type: 'personal'
+            }
+        ];
+
+        const events = [
+            {
+                time: '9:00 AM - 10:00 AM',
+                title: 'Team Standup',
+                description: 'Daily sync with development team'
+            },
+            {
+                time: '2:00 PM - 3:30 PM',
+                title: 'Client Presentation',
+                description: 'Demo new features to stakeholders'
+            },
+            {
+                time: '4:00 PM - 5:00 PM',
+                title: 'One-on-One with Manager',
+                description: 'Monthly performance review'
+            }
+        ];
+
+        let currentEmail = null;
+
+        function renderEmails() {
+            const emailList = document.getElementById('emailList');
+            emailList.innerHTML = emails.map(email => `
+                <div class="email-card" data-id="${email.id}">
+                    <div class="email-header">
+                        <span class="email-sender">${email.sender}</span>
+                        <span class="email-time">${email.time}</span>
+                    </div>
+                    <div class="email-subject">${email.subject}</div>
+                    <div class="email-preview">${email.preview}</div>
+                    <div class="email-actions">
+                        <button class="btn btn-primary" onclick="handleEmail(${email.id}, 'respond')">AI Respond</button>
+                        <button class="btn btn-secondary" onclick="handleEmail(${email.id}, 'schedule')">Schedule Meeting</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderCalendar() {
+            const calendarGrid = document.getElementById('calendarGrid');
+            calendarGrid.innerHTML = events.map(event => `
+                <div class="calendar-event">
+                    <div class="event-time">${event.time}</div>
+                    <div class="event-title">${event.title}</div>
+                    <div class="event-description">${event.description}</div>
+                </div>
+            `).join('');
+        }
+
+        function handleEmail(emailId, action) {
+            currentEmail = emails.find(e => e.id === emailId);
+            const modal = document.getElementById('aiModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const aiResponse = document.getElementById('aiResponse');
+
+            if (action === 'respond') {
+                modalTitle.textContent = 'AI-Generated Response';
+                aiResponse.innerHTML = generateEmailResponse(currentEmail);
+            } else if (action === 'schedule') {
+                modalTitle.textContent = 'Schedule Meeting';
+                aiResponse.innerHTML = generateMeetingSchedule(currentEmail);
+            }
+
+            modal.classList.add('active');
+        }
+
+        function generateEmailResponse(email) {
+            const responses = {
+                'meeting': `
+                    <p>Hi ${email.sender.split(' ')[0]},</p>
+                    <p>Thank you for reaching out! I'd be happy to discuss the Q4 budget allocation with you. Tuesday works perfectly for me.</p>
+                    <p>Would 2:00 PM work for you? We can meet in the main conference room or via video call, whichever you prefer.</p>
+                    <p>Looking forward to it!</p>
+                    <p>Best regards</p>
+                `,
+                'invitation': `
+                    <p>Dear Tech Conference Team,</p>
+                    <p>Thank you so much for this incredible opportunity! I'm honored to be considered as a keynote speaker.</p>
+                    <p>I would love to participate. Could you please share more details about the expected topics, date, and format?</p>
+                    <p>Looking forward to hearing from you.</p>
+                    <p>Best regards</p>
+                `,
+                'follow-up': `
+                    <p>Hi ${email.sender.split(' ')[0]},</p>
+                    <p>Thanks for the reminder! I'll send you a comprehensive project update by end of day today.</p>
+                    <p>The mobile app is progressing well - we're currently in the testing phase and on track for the planned release date.</p>
+                    <p>Let me know if you need any specific details for the stakeholder report.</p>
+                    <p>Best</p>
+                `,
+                'notification': `
+                    <p><em>This appears to be an automated notification. AI suggests archiving or marking as read.</em></p>
+                `,
+                'personal': `
+                    <p>Hi ${email.sender.split(' ')[0]}!</p>
+                    <p>So great to hear from you! I'd love to catch up - it really has been too long.</p>
+                    <p>Friday works great for me. How about 10:00 AM at that coffee place near the office?</p>
+                    <p>Can't wait to catch up!</p>
+                `
+            };
+
+            return responses[email.type] || '<p>AI is analyzing this email and preparing a response...</p>';
+        }
+
+        function generateMeetingSchedule(email) {
+            return `
+                <p><strong>Meeting Details:</strong></p>
+                <p><strong>Title:</strong> ${email.subject}</p>
+                <p><strong>Attendees:</strong> You, ${email.sender}</p>
+                <p><strong>Suggested Time:</strong> Tomorrow, 2:00 PM - 3:00 PM</p>
+                <p><strong>Location:</strong> Virtual Meeting (Google Meet link will be generated)</p>
+                <p><strong>Calendar Invite:</strong> Will be sent to ${email.sender.toLowerCase().replace(' ', '.')}@company.com</p>
+                <br>
+                <p><em>AI has analyzed both calendars and found this optimal time slot.</em></p>
+            `;
+        }
+
+        function closeModal() {
+            document.getElementById('aiModal').classList.remove('active');
+        }
+
+        function confirmAction() {
+            showToast('Action completed successfully! ✓');
+            closeModal();
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('active');
+            
+            setTimeout(() => {
+                toast.classList.remove('active');
+            }, 3000);
+        }
+
+        renderEmails();
+        renderCalendar();
+    </script>
+</body>
+</html>
